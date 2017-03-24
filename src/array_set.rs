@@ -2,14 +2,14 @@ use Set;
 
 // A sorted dynamic array.
 #[derive(Debug)]
-pub struct DynamicArraySet {
+pub struct ArraySet {
     values: Vec<i32>
 }
 
-impl Set for DynamicArraySet {
+impl Set for ArraySet {
     // create a set
     fn new() -> Self {
-        DynamicArraySet {
+        ArraySet {
             values: Vec::new()
         }
     }
@@ -86,7 +86,7 @@ impl Set for DynamicArraySet {
 #[cfg(test)]
 mod tests {
     use Set;
-    use dynamic_arr_set::DynamicArraySet;
+    use array_set::ArraySet;
 
     #[test]
     fn test_member() {
@@ -138,8 +138,8 @@ mod tests {
         assert_eq!(set.select(4), Some(5));
     }
 
-    fn create_testing_data() -> DynamicArraySet {
-        let mut set = DynamicArraySet::new();
+    fn create_testing_data() -> ArraySet {
+        let mut set = ArraySet::new();
 
         // insert data
         set.insert(1);

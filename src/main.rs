@@ -1,10 +1,10 @@
 extern crate ds_collection;
 
 use ds_collection::Set;
-use ds_collection::dynamic_arr_set::DynamicArraySet;
+use ds_collection::array_set::ArraySet;
 
 fn main() {
-    let mut set = DynamicArraySet::new();
+    let mut set = ArraySet::new();
     set.insert(1);
     set.insert(5);
     set.insert(2);

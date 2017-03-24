@@ -1,5 +1,5 @@
 
-pub mod dynamic_arr_set;
+pub mod array_set;
 
 pub trait Set {
     // create a set
