@@ -1,0 +1,6 @@
+[package]
+name = "ds-collection"
+version = "0.1.0"
+authors = ["SLMT <sam123456777@gmail.com>"]
+
+[dependencies]
