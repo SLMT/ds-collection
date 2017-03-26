@@ -1,10 +1,10 @@
 extern crate ds_collection;
 
 use ds_collection::Set;
-use ds_collection::array_set::ArraySet;
+use ds_collection::tree::BasicBinaryTree;
 
 fn main() {
-    let mut set = ArraySet::new();
+    let mut set = BasicBinaryTree::new();
     set.insert(1);
     set.insert(5);
     set.insert(2);

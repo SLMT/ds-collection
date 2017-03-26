@@ -1,39 +1,21 @@
-use std::rc::Rc;
-
 use Set;
 
 #[derive(Debug)]
 struct Node {
-    left: Option<Rc<Node>>,
-    right: Option<Rc<Node>>,
+    left: Option<Box<Node>>,
+    right: Option<Box<Node>>,
     value: i32,
     size: usize // to speed up Select and Rank
 }
 
 impl Node {
-    fn new(x: i32) -> Self {
-        Node {
+    fn new(x: i32) -> Option<Box<Node>> {
+        Some(Box::new(Node {
             left: None,
             right:None,
             value: x,
             size: 1
-        }
-    }
-
-    fn search(&self, x: i32) -> Option<Rc<Node>> {
-        if x == self.value {
-            true
-        } else if x < self.value {
-            match self.left {
-                Some(node) => node.member(x),
-                None => false
-            }
-        } else {
-            match self.right {
-                Some(node) => node.member(x),
-                None => false
-            }
-        }
+        }))
     }
 
     fn member(&self, x: i32) -> bool {
@@ -69,8 +51,8 @@ impl Node {
             };
 
             match right_result {
-                Some(val) => val,
-                None => self.value
+                Some(val) => Some(val),
+                None => Some(self.value)
             }
         }
     }
@@ -99,7 +81,7 @@ impl Node {
                 if j < left_node.size {
                     left_node.select(j)
                 } else if j == left_node.size {
-                    self.value
+                    Some(self.value)
                 } else {
                     match self.right {
                         Some(right_node) => right_node.select(j - left_node.size - 1),
@@ -115,61 +97,92 @@ impl Node {
         if x < self.value {
             match self.left {
                 Some(node) => node.insert(x),
-                None => {
-                    self.left = Node::new(x);
-                    self.size += 1;
-                }
+                None => self.left = Node::new(x)
             };
+            self.size += 1;
         } else {
             match self.right {
                 Some(node) => node.insert(x),
-                None => {
-                    self.right = Node::new(x);
-                    self.size += 1;
-                }
+                None => self.right = Node::new(x)
             };
+            self.size += 1;
+        }
+    }
+
+    fn delete_rightmost(self) -> Option<Box<Node>> {
+        match self.right {
+            Some(node) => {
+                self.right = node.delete_rightmost();
+                self.size -= 1;
+                Some(Box::new(self))
+            },
+            None => match self.left {
+                Some(node) => Some(node),
+                None => None
+            }
         }
     }
 
     // it returns the new root
-    fn delete(self, x: i32) -> Node {
-        // if x < self.value {
-        //     match self.left {
-        //         Some(node) => {
-        //             self.left = node.delete(x);
-        //         },
-        //         None => {}
-        //     }
-        //     self
-        // } else if x > self.value {
-        //     match self.right {
-        //         Some(node) => {
-        //             self.right = node.delete(x);
-        //         },
-        //         None => {}
-        //     }
-        //     self
-        // } else {
-        //     // TODO: Finish this
-        //     let new_root = match self.left {
-        //         Some(node) => node.predecessor(x),
-        //         None => None
-        //     }
-        //     self
-        // }
-        None
+    fn delete(self, x: i32) -> Option<Box<Node>> {
+        if x < self.value {
+            match self.left {
+                Some(node) => {
+                    self.left = node.delete(x);
+                },
+                None => {}
+            }
+            self.size -= 1;
+            Some(Box::new(self))
+        } else if x > self.value {
+            match self.right {
+                Some(node) => {
+                    self.right = node.delete(x);
+                },
+                None => {}
+            }
+            self.size -= 1;
+            Some(Box::new(self))
+        } else {
+            // Case 1: No left nor right => return None
+            // Case 2: Has left but not right => return left
+            // Case 3: Has right but not left => return right
+            // Case 4: Has left and right => make the predecessor has new root
+
+            if let Some(left) = self.left {
+                if let Some(right) = self.right {
+                    // Case 4
+                    let mut new_root = left.delete_rightmost().unwrap();
+                    new_root.size = left.size + right.size + 1;
+                    new_root.left = Some(left);
+                    new_root.right = Some(right);
+                    Some(new_root)
+                } else {
+                    // Case 2
+                    Some(left)
+                }
+            } else {
+                if let Some(right) = self.right {
+                    // Case 3
+                    Some(right)
+                } else {
+                    // Case 1
+                    None
+                }
+            }
+        }
     }
 }
 
 #[derive(Debug)]
-pub struct BasicBinaryTreeSet {
-    root: Option<Rc<Node>>
+pub struct BasicBinaryTree {
+    root: Option<Box<Node>>
 }
 
-impl Set for BasicBinaryTreeSet {
+impl Set for BasicBinaryTree {
     // create a set
     fn new() -> Self {
-        BasicBinaryTreeSet {
+        BasicBinaryTree {
             root: None
         }
     }
@@ -186,7 +199,7 @@ impl Set for BasicBinaryTreeSet {
     fn predecessor(&self, x: i32) -> Option<i32> {
         match self.root {
             Some(node) => node.predecessor(x),
-            None => false
+            None => None
         }
     }
 
@@ -201,7 +214,7 @@ impl Set for BasicBinaryTreeSet {
     // the j-th smallest integer in the set
     fn select(&self, j: usize) -> Option<i32> {
         match self.root {
-            Some(node) => node.select(x),
+            Some(node) => node.select(j),
             None => None
         }
     }
@@ -211,13 +224,15 @@ impl Set for BasicBinaryTreeSet {
         match self.root {
             Some(node) => node.insert(x),
             None => {
-                self.root = Some(Rc::new(Node::new(x)));
+                self.root = Node::new(x);
             }
         }
     }
 
     // delete x in the set
     fn delete(&mut self, x: i32) {
-        // TODO
+        if let Some(root_node) = self.root {
+            self.root = root_node.delete(x);
+        }
     }
 }

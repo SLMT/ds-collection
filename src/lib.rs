@@ -1,5 +1,6 @@
 
 pub mod array_set;
+pub mod tree;
 
 pub trait Set {
     // create a set
