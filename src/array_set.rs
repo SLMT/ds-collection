@@ -40,7 +40,7 @@ impl Set for ArraySet {
     fn rank(&self, x: i32) -> usize {
         let mut count: usize = 0;
         for val in &self.values {
-            if *val == x {
+            if *val > x {
                 break;
             }
             count += 1;
@@ -108,8 +108,9 @@ mod tests {
     fn test_rank() {
         let set = create_testing_data();
 
-        assert_eq!(set.rank(1), 0);
-        assert_eq!(set.rank(3), 2);
+        assert_eq!(set.rank(1), 1);
+        assert_eq!(set.rank(3), 3);
+        assert_eq!(set.rank(6), 5);
     }
 
     #[test]

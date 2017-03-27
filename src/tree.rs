@@ -58,20 +58,26 @@ impl Node {
     }
 
     fn rank(&self, x: i32) -> usize {
-        let left_size = match self.left {
-            Some(ref node) => node.size,
-            None => 0
-        };
-
         if x < self.value {
-            left_size
-        } else if x == self.value {
-            left_size + 1
+            if let Some(ref left_node) = self.left {
+                left_node.rank(x)
+            } else {
+                0
+            }
         } else {
-            left_size + 1 + (match self.right {
+            let left_size = match self.left {
                 Some(ref node) => node.size,
                 None => 0
-            })
+            };
+
+            if x == self.value {
+                left_size + 1
+            } else {
+                left_size + 1 + (match self.right {
+                    Some(ref node) => node.rank(x),
+                    None => 0
+                })
+            }
         }
     }
 
@@ -89,7 +95,16 @@ impl Node {
                     }
                 }
             },
-            None => None
+            None => {
+                if j == 0 {
+                    Some(self.value)
+                } else {
+                    match self.right {
+                        Some(ref right_node) => right_node.select(j - 1),
+                        None => None
+                    }
+                }
+            }
         }
     }
 
@@ -239,8 +254,78 @@ impl Set for BasicBinaryTree {
 
     // delete x in the set
     fn delete(&mut self, x: i32) {
-        if let Some(root_node) = self.root {
+        if let Some(root_node) = self.root.take() {
             self.root = root_node.delete(x);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use Set;
+    use tree::BasicBinaryTree;
+
+    #[test]
+    fn test_member() {
+        let set = create_testing_data();
+
+        assert_eq!(set.member(3), true);
+        assert_eq!(set.member(6), false);
+    }
+
+    #[test]
+    fn test_predecessor() {
+        let set = create_testing_data();
+
+        assert_eq!(set.predecessor(1), None);
+        assert_eq!(set.predecessor(5), Some(4));
+    }
+
+    #[test]
+    fn test_rank() {
+        let set = create_testing_data();
+
+        assert_eq!(set.rank(1), 1);
+        assert_eq!(set.rank(3), 3);
+        assert_eq!(set.rank(6), 5);
+    }
+
+    #[test]
+    fn test_select() {
+        let set = create_testing_data();
+
+        assert_eq!(set.select(0), Some(1));
+        assert_eq!(set.select(3), Some(4));
+    }
+
+    #[test]
+    fn test_delete1() {
+        let mut set = create_testing_data();
+
+        assert_eq!(set.select(2), Some(3));
+        set.delete(3);
+        assert_eq!(set.select(2), Some(4));
+    }
+
+    #[test]
+    fn test_delete2() {
+        let mut set = create_testing_data();
+
+        assert_eq!(set.select(4), Some(5));
+        set.delete(6);
+        assert_eq!(set.select(4), Some(5));
+    }
+
+    fn create_testing_data() -> BasicBinaryTree {
+        let mut set = BasicBinaryTree::new();
+
+        // insert data
+        set.insert(1);
+        set.insert(5);
+        set.insert(2);
+        set.insert(4);
+        set.insert(3);
+
+        set
     }
 }

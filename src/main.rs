@@ -10,5 +10,8 @@ fn main() {
     set.insert(2);
     set.insert(4);
     set.insert(3);
+
     println!("{:?}", set);
+    println!("{:?}", set.select(0));
+    println!("{:?}", set.select(4));
 }
