@@ -1,7 +1,10 @@
+
+use std::mem;
+
 use Set;
 
 #[derive(Debug)]
-struct Node {
+pub struct Node {
     left: Option<Box<Node>>,
     right: Option<Box<Node>>,
     value: i32,
@@ -16,22 +19,6 @@ impl Node {
             value: x,
             size: 1
         }))
-    }
-
-    fn member(&self, x: i32) -> bool {
-        if x == self.value {
-            true
-        } else if x < self.value {
-            match self.left {
-                Some(ref node) => node.member(x),
-                None => false
-            }
-        } else {
-            match self.right {
-                Some(ref node) => node.member(x),
-                None => false
-            }
-        }
     }
 
     fn predecessor(&self, x: i32) -> Option<i32> {
@@ -107,120 +94,60 @@ impl Node {
             }
         }
     }
+}
 
-    fn insert(&mut self, x: i32) {
-        if x < self.value {
-            match self.left {
-                Some(ref mut node) => node.insert(x),
-                None => self.left = Node::new(x)
-            };
-            self.size += 1;
-        } else {
-            match self.right {
-                Some(ref mut node) => node.insert(x),
-                None => self.right = Node::new(x)
-            };
-            self.size += 1;
-        }
-    }
-
-    // return the new root and the deleted value
-    fn delete_rightmost(mut self) -> (Option<Box<Node>>, Option<i32>) {
-        match self.right {
-            Some(node) => {
-                let (new_root, val) = node.delete_rightmost();
-                self.right = new_root;
-                self.size -= 1;
-
-                (Some(Box::new(self)), val)
-            },
-            None => match self.left {
-                Some(node) => (Some(node), Some(self.value)),
-                None => (None, Some(self.value))
-            }
-        }
-    }
-
-    // it returns the new root
-    fn delete(mut self, x: i32) -> Option<Box<Node>> {
-        if x < self.value {
-            match self.left {
-                Some(node) => {
-                    self.left = node.delete(x);
-                },
-                None => {}
-            }
-            self.size -= 1;
-            Some(Box::new(self))
-        } else if x > self.value {
-            match self.right {
-                Some(node) => {
-                    self.right = node.delete(x);
-                },
-                None => {}
-            }
-            self.size -= 1;
-            Some(Box::new(self))
-        } else {
-            // Case 1: No left nor right => return None
-            // Case 2: Has left but not right => return left
-            // Case 3: Has right but not left => return right
-            // Case 4: Has left and right => make the predecessor has new root
-
-            if let Some(left) = self.left {
-                if let Some(right) = self.right {
-                    // Case 4
-                    let (new_left, val) = left.delete_rightmost();
-                    let new_left = new_left.unwrap();
-                    let new_size = new_left.size + right.size + 1;
-
-                    Some(Box::new(Node {
-                        left: Some(new_left),
-                        right: Some(right),
-                        value: val.unwrap(),
-                        size: new_size
-                    }))
-                } else {
-                    // Case 2
-                    Some(left)
-                }
-            } else {
-                if let Some(right) = self.right {
-                    // Case 3
-                    Some(right)
-                } else {
-                    // Case 1
-                    None
-                }
-            }
-        }
+fn size(node_opt: &Option<Box<Node>>) -> usize {
+    match *node_opt {
+        Some(ref node) => node.size,
+        None => 0
     }
 }
 
-#[derive(Debug)]
-pub struct BasicBinaryTree {
-    root: Option<Box<Node>>
+fn delete_rightmost(node_opt: &mut Option<Box<Node>>) -> Option<Box<Node>> {
+    if let Some(ref mut node) = *node_opt {
+        if node.right.is_some() {
+            node.size -= 1;
+            return delete_rightmost(&mut node.right);
+        } else if node.left.is_some() {
+            node.size -= 1;
+            return delete_rightmost(&mut node.left);
+        }
+    }
+
+    if node_opt.is_some() {
+        return node_opt.take();
+    }
+
+    return None;
 }
+
+pub type BasicBinaryTree = Option<Box<Node>>;
 
 impl Set for BasicBinaryTree {
     // create a set
     fn new() -> Self {
-        BasicBinaryTree {
-            root: None
-        }
+        None
     }
 
     // is x in the set
     fn member(&self, x: i32) -> bool {
-        match self.root {
-            Some(ref node) => node.member(x),
+        match *self {
+            Some(ref node) => {
+                if x == node.value {
+                    true
+                } else if x < node.value {
+                    node.left.member(x)
+                } else {
+                    node.right.member(x)
+                }
+            },
             None => false
         }
     }
 
     // the integer in the set that is just smaller than x
     fn predecessor(&self, x: i32) -> Option<i32> {
-        match self.root {
+        match *self {
             Some(ref node) => node.predecessor(x),
             None => None
         }
@@ -228,7 +155,7 @@ impl Set for BasicBinaryTree {
 
     // # of integers in the set smaller than or equal to x
     fn rank(&self, x: i32) -> usize {
-        match self.root {
+        match *self {
             Some(ref node) => node.rank(x),
             None => 0
         }
@@ -236,7 +163,7 @@ impl Set for BasicBinaryTree {
 
     // the j-th smallest integer in the set
     fn select(&self, j: usize) -> Option<i32> {
-        match self.root {
+        match *self {
             Some(ref node) => node.select(j),
             None => None
         }
@@ -244,18 +171,67 @@ impl Set for BasicBinaryTree {
 
     // insert x into the set
     fn insert(&mut self, x: i32) {
-        match self.root {
-            Some(ref mut node) => node.insert(x),
+        match *self {
+            Some(ref mut node) => {
+                if x < node.value {
+                    node.left.insert(x);
+                    node.size += 1;
+                } else {
+                    node.right.insert(x);
+                    node.size += 1;
+                }
+            },
             None => {
-                self.root = Node::new(x);
+                mem::replace(self, Node::new(x));
             }
         }
     }
 
     // delete x in the set
     fn delete(&mut self, x: i32) {
-        if let Some(root_node) = self.root.take() {
-            self.root = root_node.delete(x);
+        // Search the node
+        if let Some(ref mut node) = *self {
+            if x < node.value {
+                node.left.delete(x);
+                node.size -= 1;
+                return;
+            } else if x > node.value {
+                node.right.delete(x);
+                node.size -= 1;
+                return;
+            }
+        } else {
+            return;
+        }
+
+        // Found the node
+        if let Some(mut node) = self.take() {
+            // Case 1: No left nor right => directly delete itself
+            // Case 2: Has left but not right => replace with left
+            // Case 3: Has right but not left => replace with right
+            // Case 4: Has left and right => make the predecessor has new root
+
+            if node.left.is_some() {
+                if node.right.is_some() {
+                    // Case 4
+                    let mut rightmost = delete_rightmost(&mut node.left).unwrap();
+                    mem::replace(&mut rightmost.left, node.left.take());
+                    mem::replace(&mut rightmost.right, node.right.take());
+                    rightmost.size = size(&rightmost.left) + size(&rightmost.right) + 1;
+                    mem::replace(self, Some(rightmost));
+                } else {
+                    // Case 2
+                    mem::replace(self, node.left.take());
+                }
+            } else {
+                if node.right.is_some() {
+                    // Case 3
+                    mem::replace(self, node.right.take());
+                } else {
+                    // Case 1
+                    mem::replace(self, None);
+                }
+            }
         }
     }
 }
