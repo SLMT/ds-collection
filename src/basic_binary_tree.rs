@@ -239,7 +239,7 @@ impl Set for BasicBinaryTree {
 #[cfg(test)]
 mod tests {
     use Set;
-    use tree::BasicBinaryTree;
+    use basic_binary_tree::BasicBinaryTree;
 
     #[test]
     fn test_member() {

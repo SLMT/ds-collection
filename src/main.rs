@@ -1,7 +1,7 @@
 extern crate ds_collection;
 
 use ds_collection::Set;
-use ds_collection::tree::BasicBinaryTree;
+use ds_collection::basic_binary_tree::BasicBinaryTree;
 
 fn main() {
     let mut set = BasicBinaryTree::new();
