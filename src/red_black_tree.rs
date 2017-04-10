@@ -1,19 +1,21 @@
 
+use std::cell::RefCell;
 use std::rc::Rc;
+use std::fmt;
 
 use Set;
 
-#[derive(Debug)]
 enum Color {
     RED,
     BLACK
 }
 
-#[derive(Debug)]
+type NodeLink = Option<Rc<RefCell<Node>>>;
+
 struct Node {
-    left: Option<Rc<Node>>,
-    right: Option<Rc<Node>>,
-    parent: Option<Rc<Node>>,
+    left: NodeLink,
+    right: NodeLink,
+    parent: NodeLink,
     value: i32,
     color: Color,
     size: usize // to speed up Select and Rank
@@ -30,11 +32,77 @@ impl Node {
             size: 1
         }
     }
+
+    fn to_string(&self) -> String {
+        let left = match self.left {
+            Some(ref node) => node.borrow().to_string(),
+            None => String::from("NIL")
+        };
+        let right = match self.right {
+            Some(ref node) => node.borrow().to_string(),
+            None => String::from("NIL")
+        };
+
+        match self.color {
+            Color::RED => format!("{{ {} Red ({}) {} }}", left, self.value, right),
+            Color::BLACK => format!("{{ {} Red ({}) {} }}", left, self.value, right)
+        }
+    }
 }
 
-#[derive(Debug)]
 pub struct RedBlackTree {
-    root: Option<Rc<Node>>
+    root: NodeLink
+}
+
+impl RedBlackTree {
+    pub fn new_test() -> RedBlackTree {
+        let node_1 = Rc::new(RefCell::new(Node::new(1)));
+        let node_2 = Rc::new(RefCell::new(Node::new(2)));
+        let node_3 = Rc::new(RefCell::new(Node::new(3)));
+        let node_4 = Rc::new(RefCell::new(Node::new(4)));
+        let node_5 = Rc::new(RefCell::new(Node::new(5)));
+        let node_6 = Rc::new(RefCell::new(Node::new(6)));
+        let node_7 = Rc::new(RefCell::new(Node::new(7)));
+
+        node_1.borrow_mut().color = Color::BLACK;
+        node_2.borrow_mut().color = Color::BLACK;
+        node_3.borrow_mut().color = Color::BLACK;
+        node_4.borrow_mut().color = Color::BLACK;
+        node_5.borrow_mut().color = Color::BLACK;
+        node_6.borrow_mut().color = Color::BLACK;
+        node_7.borrow_mut().color = Color::BLACK;
+
+        node_1.borrow_mut().parent = Some(node_2.clone());
+        node_2.borrow_mut().parent = Some(node_4.clone());
+        node_3.borrow_mut().parent = Some(node_2.clone());
+        node_5.borrow_mut().parent = Some(node_6.clone());
+        node_6.borrow_mut().parent = Some(node_4.clone());
+        node_7.borrow_mut().parent = Some(node_6.clone());
+
+        node_2.borrow_mut().left = Some(node_1);
+        node_2.borrow_mut().right = Some(node_3);
+        node_6.borrow_mut().left = Some(node_5);
+        node_6.borrow_mut().right = Some(node_7);
+        node_4.borrow_mut().left = Some(node_2);
+        node_4.borrow_mut().right = Some(node_6);
+
+        RedBlackTree {
+            root: Some(node_4)
+        }
+    }
+
+    fn to_string(&self) {
+
+    }
+}
+
+impl fmt::Display for RedBlackTree {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", match self.root {
+            Some(ref node) => node.borrow().to_string(),
+            None => String::from("NIL")
+        })
+    }
 }
 
 impl Set for RedBlackTree {
@@ -71,6 +139,19 @@ impl Set for RedBlackTree {
 
     // insert x into the set
     fn insert(&mut self, x: i32) {
+        // let parent: &mut Option<Box<Node>> = &mut None;
+        // let current: &mut Option<Box<Node>> = &mut self.root;
+        // let new_node = Box::new(Node::new(x));
+        //
+        // while let Some(current_node) = *current {
+        //     parent = current;
+        //
+        //     if new_node.value < current_node.value {
+        //         current = &mut current_node.left;
+        //     } else {
+        //         current = &mut current_node.right;
+        //     }
+        // }
         // TODO
     }
 

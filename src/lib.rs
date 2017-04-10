@@ -1,4 +1,6 @@
 
+mod utils;
+
 pub mod array_set;
 pub mod basic_binary_tree;
 pub mod red_black_tree;
