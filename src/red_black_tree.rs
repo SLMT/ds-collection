@@ -10,6 +10,10 @@ enum Color {
     BLACK
 }
 
+// Rc provides a way to maintain multiple references (children and parent pointers) and
+// shared ownership in the same time. However, an object referenced by Rc is immutable.
+// RefCell is another good stuff to solve the problem. RefCell allows us to mutablly borrow
+// an object through immutable reference, which could be a Rc.
 type NodeLink = Option<Rc<RefCell<Node>>>;
 
 struct Node {
