@@ -143,20 +143,43 @@ impl Set for RedBlackTree {
 
     // insert x into the set
     fn insert(&mut self, x: i32) {
-        // let parent: &mut Option<Box<Node>> = &mut None;
-        // let current: &mut Option<Box<Node>> = &mut self.root;
-        // let new_node = Box::new(Node::new(x));
-        //
-        // while let Some(current_node) = *current {
-        //     parent = current;
-        //
-        //     if new_node.value < current_node.value {
-        //         current = &mut current_node.left;
-        //     } else {
-        //         current = &mut current_node.right;
-        //     }
-        // }
-        // TODO
+        let mut parent: NodeLink = None;
+        let mut current: NodeLink = self.root.clone();
+
+        // Find a proper position
+        while current.is_some() {
+            current = match current {
+                Some(ref current_node) => {
+                    parent = Some(current_node.clone());
+
+                    if x < current_node.borrow().value {
+                        current_node.borrow().left.clone()
+                    } else {
+                        current_node.borrow().right.clone()
+                    }
+                },
+                None => None
+            }
+        }
+
+        // Create a new node
+        let new_node = Rc::new(RefCell::new(Node::new(x)));
+        new_node.borrow_mut().parent = parent.clone();
+
+        match parent {
+            Some(ref parent_node) => {
+                let parent_val = parent_node.borrow().value;
+
+                if x < parent_val {
+                    parent_node.borrow_mut().left = Some(new_node);
+                } else {
+                    parent_node.borrow_mut().right = Some(new_node);
+                }
+            },
+            None => {
+                self.root = Some(new_node);
+            }
+        }
     }
 
     // delete x in the set
