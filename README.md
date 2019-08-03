@@ -7,5 +7,8 @@ Just for practice.
 ## Current Implementations
 
 - Set
-  - ArraySet
-    - Backed by a sorted array.
+    - Array Set
+        - Backed by a sorted array.
+    - Basic Binary Tree
+- List
+    - Doubly Linked List

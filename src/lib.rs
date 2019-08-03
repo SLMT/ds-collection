@@ -1,6 +1,7 @@
 
 pub mod array_set;
 pub mod basic_binary_tree;
+pub mod doubly_linked_list;
 
 pub trait Set {
     // create a set
